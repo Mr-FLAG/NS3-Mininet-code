@@ -1,0 +1,254 @@
+#设置胖树拓扑，设置OpenFlow1.3协议，开启STP生成树协议
+sudo mn --custom ~/mininet/custom/MyFT2.0.py --switch=ovsk,protocols=OpenFlow13,failMode='standalone',stp=True --topo mytopo
+
+添加流表：
+sh ovs-ofctl add-flow s1 priority=500,dl_type=0x800,nw_src=10.0.0.0/24,nw_dst=10.0.0.0/24,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow s1 priority=5
+00,dl_type=0x0800,nw_src=10.0.0.0/24,nw_dst=10.0.0.0/24,actions=normal
+sh ovs-ofctl add-flow c1 
+
+//dl_type=0x0800  表示IPv4
+
+查看流表：
+sh ovs-ofctl -O OpenFlow13 dump-flows s1
+删除流表：
+sh ovs-ofctl -O OpenFlow13 del-flows c0
+sh ovs-ofctl -O OpenFlow13 del-flows c1
+sh ovs-ofctl -O OpenFlow13 del-flows c2
+sh ovs-ofctl -O OpenFlow13 del-flows c3
+
+sh ovs-ofctl -O OpenFlow13 del-flows a0
+sh ovs-ofctl -O OpenFlow13 del-flows a1
+sh ovs-ofctl -O OpenFlow13 del-flows a2
+sh ovs-ofctl -O OpenFlow13 del-flows a3
+sh ovs-ofctl -O OpenFlow13 del-flows a4
+sh ovs-ofctl -O OpenFlow13 del-flows a5
+sh ovs-ofctl -O OpenFlow13 del-flows a6
+sh ovs-ofctl -O OpenFlow13 del-flows a7
+
+sh ovs-ofctl -O OpenFlow13 del-flows e0
+sh ovs-ofctl -O OpenFlow13 del-flows e1
+sh ovs-ofctl -O OpenFlow13 del-flows e2
+sh ovs-ofctl -O OpenFlow13 del-flows e3
+sh ovs-ofctl -O OpenFlow13 del-flows e4
+sh ovs-ofctl -O OpenFlow13 del-flows e5
+sh ovs-ofctl -O OpenFlow13 del-flows e6
+sh ovs-ofctl -O OpenFlow13 del-flows e7
+
+
+table=5 //设置流表级别，0为最高级优先执行
+
+目前看到的可用action：
+actions=drop //丢弃所有包
+actions=output:1 //转发至端口1
+actions=normal //允许设备进行正常L2/L3数据包处理
+actions=flood //向除输入端口外的所有端口转发
+actions=push_vlan:0x8100,set_field:4096-\>vlan_vid  
+//向VLAN标签中插入VLAN标签0(输入数值要-4096),0x8100表示标签协议ID（固定）
+actions=pop_vlan //弹出上一个VLAN标签
+actions=mod_vlan_vid:100
+
+数据记录：
+4-ary 胖树拓扑，10.0.0.1 ping 10.2.0.1:
+无任何配置，使用STP后ping 100次，取平均值：0.135ms 0.138ms
+配置CherryPick:
+
+配置CherryPick-S: 0.138ms 	
+
+
+CherryPick:
+sh ovs-ofctl -O OpenFlow13 add-flow c0 priority=1,ip,in_port=1,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c0 priority=1,ip,in_port=2,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c0 priority=1,ip,in_port=3,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c0 priority=1,ip,in_port=4,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c1 priority=1,ip,in_port=1,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c1 priority=1,ip,in_port=2,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c1 priority=1,ip,in_port=3,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c1 priority=1,ip,in_port=4,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c2 priority=1,ip,in_port=1,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c2 priority=1,ip,in_port=2,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c2 priority=1,ip,in_port=3,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c2 priority=1,ip,in_port=4,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c3 priority=1,ip,in_port=1,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c3 priority=1,ip,in_port=2,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c3 priority=1,ip,in_port=3,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c3 priority=1,ip,in_port=4,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+
+sh ovs-ofctl -O OpenFlow13 add-flow a0 priority=1,ip,nw_dst=10.0.0.0/16,in_port=1,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a0 priority=1,ip,nw_dst=10.0.0.0/16,in_port=2,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a1 priority=1,ip,nw_dst=10.0.0.0/16,in_port=1,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a1 priority=1,ip,nw_dst=10.0.0.0/16,in_port=2,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a2 priority=1,ip,nw_dst=10.1.0.0/16,in_port=1,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a2 priority=1,ip,nw_dst=10.1.0.0/16,in_port=2,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a3 priority=1,ip,nw_dst=10.1.0.0/16,in_port=1,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a3 priority=1,ip,nw_dst=10.1.0.0/16,in_port=2,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a4 priority=1,ip,nw_dst=10.2.0.0/16,in_port=1,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a4 priority=1,ip,nw_dst=10.2.0.0/16,in_port=2,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a5 priority=1,ip,nw_dst=10.2.0.0/16,in_port=1,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a5 priority=1,ip,nw_dst=10.2.0.0/16,in_port=2,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a6 priority=1,ip,nw_dst=10.3.0.0/16,in_port=1,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a6 priority=1,ip,nw_dst=10.3.0.0/16,in_port=2,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a7 priority=1,ip,nw_dst=10.3.0.0/16,in_port=1,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a7 priority=1,ip,nw_dst=10.3.0.0/16,in_port=2,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+
+sh ovs-ofctl -O OpenFlow13 add-flow e0 priority=1,ip,nw_src=10.0.0.0/16,nw_dst=10.0.0.0/16,in_port=3,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e0 priority=1,ip,nw_src=10.0.0.0/16,nw_dst=10.0.0.0/16,in_port=4,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e0 priority=1,ip,nw_src=10.0.0.0/16,in_port=3,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e0 priority=1,ip,nw_src=10.0.0.0/16,in_port=4,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e1 priority=1,ip,nw_src=10.0.0.0/16,nw_dst=10.0.0.0/16,in_port=3,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e1 priority=1,ip,nw_src=10.0.0.0/16,nw_dst=10.0.0.0/16,in_port=4,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e1 priority=1,ip,nw_src=10.0.0.0/16,in_port=3,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e1 priority=1,ip,nw_src=10.0.0.0/16,in_port=4,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e2 priority=1,ip,nw_src=10.1.0.0/16,nw_dst=10.1.0.0/16,in_port=3,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e2 priority=1,ip,nw_src=10.1.0.0/16,nw_dst=10.1.0.0/16,in_port=4,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e2 priority=1,ip,nw_src=10.1.0.0/16,in_port=3,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e2 priority=1,ip,nw_src=10.1.0.0/16,in_port=4,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e3 priority=1,ip,nw_src=10.1.0.0/16,nw_dst=10.1.0.0/16,in_port=3,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e3 priority=1,ip,nw_src=10.1.0.0/16,nw_dst=10.1.0.0/16,in_port=4,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e3 priority=1,ip,nw_src=10.1.0.0/16,in_port=3,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e3 priority=1,ip,nw_src=10.1.0.0/16,in_port=4,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e4 priority=1,ip,nw_src=10.2.0.0/16,nw_dst=10.2.0.0/16,in_port=3,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e4 priority=1,ip,nw_src=10.2.0.0/16,nw_dst=10.2.0.0/16,in_port=4,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e4 priority=1,ip,nw_src=10.2.0.0/16,in_port=3,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e4 priority=1,ip,nw_src=10.2.0.0/16,in_port=4,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e5 priority=1,ip,nw_src=10.2.0.0/16,nw_dst=10.2.0.0/16,in_port=3,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e5 priority=1,ip,nw_src=10.2.0.0/16,nw_dst=10.2.0.0/16,in_port=4,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e5 priority=1,ip,nw_src=10.2.0.0/16,in_port=3,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e5 priority=1,ip,nw_src=10.2.0.0/16,in_port=4,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e6 priority=1,ip,nw_src=10.3.0.0/16,nw_dst=10.3.0.0/16,in_port=3,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e6 priority=1,ip,nw_src=10.3.0.0/16,nw_dst=10.3.0.0/16,in_port=4,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e6 priority=1,ip,nw_src=10.3.0.0/16,in_port=3,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e6 priority=1,ip,nw_src=10.3.0.0/16,in_port=4,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e7 priority=1,ip,nw_src=10.3.0.0/16,nw_dst=10.3.0.0/16,in_port=3,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e7 priority=1,ip,nw_src=10.3.0.0/16,nw_dst=10.3.0.0/16,in_port=4,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e7 priority=1,ip,nw_src=10.3.0.0/16,in_port=3,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e7 priority=1,ip,nw_src=10.3.0.0/16,in_port=4,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+
+sh ovs-ofctl -O OpenFlow13 add-flow c0 priority=1,ip,in_port=5,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c0 priority=1,ip,in_port=6,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c0 priority=1,ip,in_port=7,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c0 priority=1,ip,in_port=8,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c1 priority=1,ip,in_port=5,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c1 priority=1,ip,in_port=6,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c1 priority=1,ip,in_port=7,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c1 priority=1,ip,in_port=8,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c2 priority=1,ip,in_port=5,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c2 priority=1,ip,in_port=6,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c2 priority=1,ip,in_port=7,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c2 priority=1,ip,in_port=8,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c3 priority=1,ip,in_port=5,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c3 priority=1,ip,in_port=6,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c3 priority=1,ip,in_port=7,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow c3 priority=1,ip,in_port=8,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+
+
+sh ovs-ofctl -O OpenFlow13 add-flow a0 priority=1,ip,nw_dst=10.0.0.0/16,in_port=3,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a0 priority=1,ip,nw_dst=10.0.0.0/16,in_port=4,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a1 priority=1,ip,nw_dst=10.0.0.0/16,in_port=3,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a1 priority=1,ip,nw_dst=10.0.0.0/16,in_port=4,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a2 priority=1,ip,nw_dst=10.1.0.0/16,in_port=3,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a2 priority=1,ip,nw_dst=10.1.0.0/16,in_port=4,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a3 priority=1,ip,nw_dst=10.1.0.0/16,in_port=3,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a3 priority=1,ip,nw_dst=10.1.0.0/16,in_port=4,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a4 priority=1,ip,nw_dst=10.2.0.0/16,in_port=3,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a4 priority=1,ip,nw_dst=10.2.0.0/16,in_port=4,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a5 priority=1,ip,nw_dst=10.2.0.0/16,in_port=3,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a5 priority=1,ip,nw_dst=10.2.0.0/16,in_port=4,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a6 priority=1,ip,nw_dst=10.3.0.0/16,in_port=3,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a6 priority=1,ip,nw_dst=10.3.0.0/16,in_port=4,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a7 priority=1,ip,nw_dst=10.3.0.0/16,in_port=3,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a7 priority=1,ip,nw_dst=10.3.0.0/16,in_port=4,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+
+sh ovs-ofctl -O OpenFlow13 add-flow e0 priority=1,ip,nw_src=10.0.0.0/16,nw_dst=10.0.0.0/16,in_port=7,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e0 priority=1,ip,nw_src=10.0.0.0/16,nw_dst=10.0.0.0/16,in_port=8,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e0 priority=1,ip,nw_src=10.0.0.0/16,in_port=7,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e0 priority=1,ip,nw_src=10.0.0.0/16,in_port=8,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e1 priority=1,ip,nw_src=10.0.0.0/16,nw_dst=10.0.0.0/16,in_port=7,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e1 priority=1,ip,nw_src=10.0.0.0/16,nw_dst=10.0.0.0/16,in_port=8,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e1 priority=1,ip,nw_src=10.0.0.0/16,in_port=7,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e1 priority=1,ip,nw_src=10.0.0.0/16,in_port=8,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e2 priority=1,ip,nw_src=10.1.0.0/16,nw_dst=10.1.0.0/16,in_port=7,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e2 priority=1,ip,nw_src=10.1.0.0/16,nw_dst=10.1.0.0/16,in_port=8,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e2 priority=1,ip,nw_src=10.1.0.0/16,in_port=7,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e2 priority=1,ip,nw_src=10.1.0.0/16,in_port=8,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e3 priority=1,ip,nw_src=10.1.0.0/16,nw_dst=10.1.0.0/16,in_port=7,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e3 priority=1,ip,nw_src=10.1.0.0/16,nw_dst=10.1.0.0/16,in_port=8,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e3 priority=1,ip,nw_src=10.1.0.0/16,in_port=7,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e3 priority=1,ip,nw_src=10.1.0.0/16,in_port=8,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e4 priority=1,ip,nw_src=10.2.0.0/16,nw_dst=10.2.0.0/16,in_port=7,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e4 priority=1,ip,nw_src=10.2.0.0/16,nw_dst=10.2.0.0/16,in_port=8,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e4 priority=1,ip,nw_src=10.2.0.0/16,in_port=7,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e4 priority=1,ip,nw_src=10.2.0.0/16,in_port=8,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e5 priority=1,ip,nw_src=10.2.0.0/16,nw_dst=10.2.0.0/16,in_port=7,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e5 priority=1,ip,nw_src=10.2.0.0/16,nw_dst=10.2.0.0/16,in_port=8,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e5 priority=1,ip,nw_src=10.2.0.0/16,in_port=7,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e5 priority=1,ip,nw_src=10.2.0.0/16,in_port=8,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e6 priority=1,ip,nw_src=10.3.0.0/16,nw_dst=10.3.0.0/16,in_port=7,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e6 priority=1,ip,nw_src=10.3.0.0/16,nw_dst=10.3.0.0/16,in_port=8,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e6 priority=1,ip,nw_src=10.3.0.0/16,in_port=7,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e6 priority=1,ip,nw_src=10.3.0.0/16,in_port=8,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e7 priority=1,ip,nw_src=10.3.0.0/16,nw_dst=10.3.0.0/16,in_port=7,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e7 priority=1,ip,nw_src=10.3.0.0/16,nw_dst=10.3.0.0/16,in_port=8,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e7 priority=1,ip,nw_src=10.3.0.0/16,in_port=7,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow e7 priority=1,ip,nw_src=10.3.0.0/16,in_port=8,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+
+
+
+
+
+
+
+
+#CherryPick-S
+sh ovs-ofctl -O OpenFlow13 add-flow c0 priority=1,actions=push_vlan:0x8100,set_field:4098-\>vlan_vid,set_field:00:00:00:00:00:01-\>eth_src
+sh ovs-ofctl -O OpenFlow13 add-flow c1 priority=1,actions=push_vlan:0x8100,set_field:4099-\>vlan_vid,set_field:00:00:00:00:00:01-\>eth_src
+sh ovs-ofctl -O OpenFlow13 add-flow c2 priority=1,actions=push_vlan:0x8100,set_field:4098-\>vlan_vid,set_field:00:00:00:00:00:01-\>eth_src
+sh ovs-ofctl -O OpenFlow13 add-flow c3 priority=1,actions=push_vlan:0x8100,set_field:4099-\>vlan_vid,set_field:00:00:00:00:00:01-\>eth_src
+sh ovs-ofctl -O OpenFlow13 add-flow a0 priority=1,eth_src=00:00:00:00:00:00,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a0 priority=1,ip,nw_dst=10.0.0.0/16,eth_src=00:00:00:00:00:01,actions=set_field:00:00:00:00:00:00-\>eth_src
+sh ovs-ofctl -O OpenFlow13 add-flow a0 priority=0,ip,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid,set_field:00:00:00:00:00:00-\>eth_src
+sh ovs-ofctl -O OpenFlow13 add-flow a1 priority=1,eth_src=00:00:00:00:00:00,actions=push_vlan:0x8100,set_field:4097-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a1 priority=1,ip,nw_dst=10.0.0.0/16,eth_src=00:00:00:00:00:01,actions=set_field:00:00:00:00:00:00-\>eth_src
+sh ovs-ofctl -O OpenFlow13 add-flow a1 priority=0,ip,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid,set_field:00:00:00:00:00:00-\>eth_src
+sh ovs-ofctl -O OpenFlow13 add-flow a2 priority=1,eth_src=00:00:00:00:00:00,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a2 priority=1,ip,nw_dst=10.1.0.0/16,eth_src=00:00:00:00:00:01,actions=set_field:00:00:00:00:00:00-\>eth_src
+sh ovs-ofctl -O OpenFlow13 add-flow a2 priority=0,ip,actions=push_vlan:0x8100,set_field:4097-\>vlan_vid,set_field:00:00:00:00:00:00-\>eth_src
+sh ovs-ofctl -O OpenFlow13 add-flow a3 priority=1,eth_src=00:00:00:00:00:00,actions=push_vlan:0x8100,set_field:4097-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a3 priority=1,ip,nw_dst=10.1.0.0/16,eth_src=00:00:00:00:00:01,actions=set_field:00:00:00:00:00:00-\>eth_src
+sh ovs-ofctl -O OpenFlow13 add-flow a3 priority=0,ip,actions=push_vlan:0x8100,set_field:4097-\>vlan_vid,set_field:00:00:00:00:00:00-\>eth_src
+sh ovs-ofctl -O OpenFlow13 add-flow a4 priority=1,eth_src=00:00:00:00:00:00,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a4 priority=1,ip,nw_dst=10.2.0.0/16,eth_src=00:00:00:00:00:01,actions=set_field:00:00:00:00:00:00-\>eth_src
+sh ovs-ofctl -O OpenFlow13 add-flow a4 priority=0,ip,actions=push_vlan:0x8100,set_field:4098-\>vlan_vid,set_field:00:00:00:00:00:00-\>eth_src
+sh ovs-ofctl -O OpenFlow13 add-flow a5 priority=1,eth_src=00:00:00:00:00:00,actions=push_vlan:0x8100,set_field:4097-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a5 priority=1,ip,nw_dst=10.2.0.0/16,eth_src=00:00:00:00:00:01,actions=set_field:00:00:00:00:00:00-\>eth_src
+sh ovs-ofctl -O OpenFlow13 add-flow a5 priority=0,ip,actions=push_vlan:0x8100,set_field:4098-\>vlan_vid,set_field:00:00:00:00:00:00-\>eth_src
+sh ovs-ofctl -O OpenFlow13 add-flow a6 priority=1,eth_src=00:00:00:00:00:00,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a6 priority=1,ip,nw_dst=10.3.0.0/16,eth_src=00:00:00:00:00:01,actions=set_field:00:00:00:00:00:00-\>eth_src
+sh ovs-ofctl -O OpenFlow13 add-flow a6 priority=0,ip,actions=push_vlan:0x8100,set_field:4099-\>vlan_vid,set_field:00:00:00:00:00:00-\>eth_src
+sh ovs-ofctl -O OpenFlow13 add-flow a7 priority=1,eth_src=00:00:00:00:00:00,actions=push_vlan:0x8100,set_field:4097-\>vlan_vid
+sh ovs-ofctl -O OpenFlow13 add-flow a7 priority=1,ip,nw_dst=10.3.0.0/16,eth_src=00:00:00:00:00:01,actions=set_field:00:00:00:00:00:00-\>eth_src
+sh ovs-ofctl -O OpenFlow13 add-flow a7 priority=0,ip,actions=push_vlan:0x8100,set_field:4099-\>vlan_vid,set_field:00:00:00:00:00:00-\>eth_src
+sh ovs-ofctl -O OpenFlow13 add-flow e0 priority=1,ip,nw_src=10.0.0.0/8,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e0 priority=1,ip,nw_dst=10.0.0.0/8,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e0 priority=0,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid 
+sh ovs-ofctl -O OpenFlow13 add-flow e1 priority=1,ip,nw_src=10.0.1.0/8,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e1 priority=1,ip,nw_dst=10.0.1.0/8,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e1 priority=0,actions=push_vlan:0x8100,set_field:4097-\>vlan_vid 
+sh ovs-ofctl -O OpenFlow13 add-flow e2 priority=1,ip,nw_src=10.1.0.0/8,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e2 priority=1,ip,nw_dst=10.1.0.0/8,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e2 priority=0,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid 
+sh ovs-ofctl -O OpenFlow13 add-flow e3 priority=1,ip,nw_src=10.1.1.0/8,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e3 priority=1,ip,nw_dst=10.1.1.0/8,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e3 priority=0,actions=push_vlan:0x8100,set_field:4097-\>vlan_vid 
+sh ovs-ofctl -O OpenFlow13 add-flow e4 priority=1,ip,nw_src=10.2.0.0/8,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e4 priority=1,ip,nw_dst=10.2.0.0/8,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e4 priority=0,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid 
+sh ovs-ofctl -O OpenFlow13 add-flow e5 priority=1,ip,nw_src=10.2.1.0/8,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e5 priority=1,ip,nw_dst=10.2.1.0/8,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e5 priority=0,actions=push_vlan:0x8100,set_field:4097-\>vlan_vid 
+sh ovs-ofctl -O OpenFlow13 add-flow e6 priority=1,ip,nw_src=10.3.0.0/8,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e6 priority=1,ip,nw_dst=10.3.0.0/8,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e6 priority=0,actions=push_vlan:0x8100,set_field:4096-\>vlan_vid 
+sh ovs-ofctl -O OpenFlow13 add-flow e7 priority=1,ip,nw_src=10.3.1.0/8,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e7 priority=1,ip,nw_dst=10.3.1.0/8,actions=normal
+sh ovs-ofctl -O OpenFlow13 add-flow e7 priority=0,actions=push_vlan:0x8100,set_field:4097-\>vlan_vid 
